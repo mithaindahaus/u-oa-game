@@ -1,0 +1,1 @@
+# Ú Òa!\n\nGame ú òa cho bé 2 tuổi: chạm vào chỗ trốn để con vật nhảy ra và kêu.\n\nẢnh tạo bằng Google Gemini. Âm thanh từ Pixabay (Pixabay Content License).\n

@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Ú Òa Nông Trại</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ú Òa">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#8fd8ff">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: home = three big scene cards; scene = sky banner + grid of hiding spots; a tapped animal jumps to a full-body stage in the middle */
+:root{
+  --ink:#3b2a20; --paper:#fffaf0; --sun:#ffd23f; --accent:#ff6b4a; --muted:#7a6a5e;
+  --sky:#8fd8ff; --sky2:#dff5ff; --ground:#86d064; --ground2:#5aa843;
+  --display:"Baloo 2","Arial Rounded MT Bold",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+body[data-scene="forest"]{--sky:#bfe8c9;--sky2:#e6f6e2;--ground:#4f9a4a;--ground2:#2f6e35}
+body[data-scene="water"]{--sky:#9fe2ff;--sky2:#e2f7ff;--ground:#48b3e6;--ground2:#1f78b8}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  height:100%;margin:0;overflow:hidden;color:var(--ink);font-family:var(--body);
+  background:
+    radial-gradient(circle at 88% 7%, var(--sun) 0 32px, transparent 33px),
+    radial-gradient(ellipse 70% 14% at 15% 24%, var(--ground) 0 99%, transparent 100%),
+    radial-gradient(ellipse 80% 16% at 90% 26%, var(--ground) 0 99%, transparent 100%),
+    linear-gradient(var(--sky) 0, var(--sky2) 24%, var(--ground) 24.2%, var(--ground2) 100%);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+img{-webkit-user-drag:none;pointer-events:none}
+button{font:inherit;color:inherit;touch-action:manipulation}
+.screen{height:100%;display:flex;flex-direction:column;gap:10px;padding-inline:16px;padding-block:10px 16px}
+header{display:flex;align-items:center;gap:10px}
+
+.iconbtn{position:relative;flex:none;width:52px;height:52px;border:4px solid var(--ink);border-radius:50%;background:var(--paper);
+  box-shadow:0 3px 0 var(--ink);display:grid;place-items:center;cursor:pointer}
+.iconbtn:active{transform:translateY(3px);box-shadow:none}
+.gear{width:44px;height:44px;border:0;box-shadow:none;background:rgba(255,255,255,.55)}
+.gear svg{position:absolute;inset:0;width:100%;height:100%}
+.gear .ring{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-dasharray:132;stroke-dashoffset:132;transform:rotate(-90deg);transform-origin:center}
+.gear.holding .ring{stroke-dashoffset:0;transition:stroke-dashoffset 3s linear}
+button:focus-visible{outline:4px dashed var(--ink);outline-offset:2px}
+
+/* Home */
+.home h1{flex:1;margin:0;font-family:var(--display);font-weight:800;font-size:clamp(46px,14vw,80px);line-height:.95;color:var(--paper);
+  -webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink)}
+.scenes{flex:1;min-height:0;display:grid;grid-template-rows:repeat(3,1fr);gap:12px}
+@media (orientation:landscape){.scenes{grid-template-rows:1fr;grid-template-columns:repeat(3,1fr)}}
+.scene-card{position:relative;overflow:hidden;border:5px solid var(--ink);border-radius:28px;box-shadow:0 5px 0 var(--ink);cursor:pointer;padding:0;
+  display:flex;align-items:flex-end;justify-content:flex-start;container-type:size}
+.scene-card:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.scene-card[data-s="farm"]{background:linear-gradient(#8fd8ff 0 45%,#86d064 45%)}
+.scene-card[data-s="forest"]{background:linear-gradient(#bfe8c9 0 45%,#4f9a4a 45%)}
+.scene-card[data-s="water"]{background:linear-gradient(#9fe2ff 0 45%,#48b3e6 45%)}
+.scene-card .pics{position:absolute;inset:6% 4% 0 32%;display:flex;align-items:flex-end;justify-content:flex-end;gap:2%}
+.scene-card .pics img{height:min(88cqh,40cqw);width:auto;max-width:34%;object-fit:contain;animation:hop 2.6s ease-in-out infinite}
+.scene-card .pics img:nth-child(2){animation-delay:.4s}.scene-card .pics img:nth-child(3){animation-delay:.8s}
+@keyframes hop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(-10%)}}
+.scene-card .label{position:relative;margin:0 0 10px 12px;background:var(--paper);border:4px solid var(--ink);border-radius:20px;padding:2px 14px;
+  font-family:var(--display);font-weight:800;font-size:clamp(20px,6vw,30px)}
+
+/* Scene */
+.caption{flex:1;min-width:0;margin:0;background:var(--paper);border:4px solid var(--ink);border-radius:28px;padding:4px 14px;
+  font-family:var(--display);font-weight:800;line-height:1.1;text-align:center;font-size:clamp(22px,6vw,36px);box-shadow:0 4px 0 var(--ink);text-wrap:balance}
+.caption .sub{display:block;font-size:.55em;font-weight:700;color:var(--muted)}
+.caption.pop{animation:capPop .35s}
+@keyframes capPop{50%{transform:scale(1.06)}}
+.field{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;gap:10px 14px;align-content:stretch}
+@media (orientation:landscape){.field{grid-template-columns:repeat(3,1fr)}}
+.field.four{grid-template-columns:repeat(2,1fr)}
+.spot{position:relative;border:0;background:none;padding:0;cursor:pointer;border-radius:20px}
+.cover{position:absolute;left:0;right:0;bottom:0;height:62%;transform-origin:50% 100%}
+.cover svg{display:block;width:100%;height:100%}
+.cover.wiggle{animation:wiggle .7s}
+.cover.shake{animation:shake .35s}
+@keyframes wiggle{20%{transform:rotate(-4deg)}40%{transform:rotate(4deg)}60%{transform:rotate(-3deg)}80%{transform:rotate(2deg)}}
+@keyframes shake{30%{transform:scale(1.06,.92)}70%{transform:scale(.97,1.04)}}
+
+/* Stage: the animal that jumped out */
+.stage{position:fixed;inset:0;z-index:5;display:grid;place-items:center}
+#play header{position:relative;z-index:6}
+.stage .glow{position:absolute;width:min(92vw,70vh);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,250,240,.95) 0 45%,rgba(255,250,240,0) 70%);opacity:0;transition:opacity .3s}
+.stage.on .glow{opacity:1}
+.stage .who{position:relative;width:min(80vw,58vh);aspect-ratio:1;pointer-events:auto;cursor:pointer}
+.stage .who canvas{display:block;width:100%;height:100%}
+
+/* Parent sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(59,42,32,.5);display:flex;align-items:center;justify-content:center;padding-inline:16px;padding-block:16px}
+.card{width:100%;max-width:560px;max-height:100%;overflow-y:auto;background:var(--paper);border:4px solid var(--ink);border-radius:24px;
+  padding:20px;display:flex;flex-direction:column;gap:18px;font-size:16px;-webkit-user-select:text;user-select:text}
+.card h2{margin:0;font-family:var(--display);font-size:28px;line-height:1.1}
+.card h3{margin:0 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card p{margin:0;line-height:1.5;max-width:65ch}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 0;min-width:96px;padding:10px 8px;border:3px solid var(--ink);border-radius:14px;background:#fff;font-weight:800;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--sun)}
+.status{font-size:14px;color:var(--muted);margin-top:6px!important}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.gal button{border:3px solid var(--ink);border-radius:16px;background:#e9f7ff;padding:6px 4px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:12px;min-width:0}
+.gal img{width:56px;height:56px;object-fit:contain}
+.done{padding:12px;border:3px solid var(--ink);border-radius:14px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;font-size:18px}
+
+@media (prefers-reduced-motion:reduce){
+  .scene-card .pics img{animation:none}
+}
+</style>
+</head>
+<body>
+
+
+<div class="screen home" id="home">
+  <header>
+    <h1>Ú Òa!</h1>
+    <button class="iconbtn gear" id="gear" aria-label="Dành cho bố mẹ: nhấn giữ 3 giây">
+      <svg viewBox="0 0 46 46" aria-hidden="true"><circle class="ring" cx="23" cy="23" r="21"/></svg>
+      <svg viewBox="0 0 46 46" aria-hidden="true"><g fill="#7a6a5e" transform="translate(23 23)">
+        <rect x="-3.5" y="-14" width="7" height="28" rx="2"/><rect x="-3.5" y="-14" width="7" height="28" rx="2" transform="rotate(45)"/>
+        <rect x="-3.5" y="-14" width="7" height="28" rx="2" transform="rotate(90)"/><rect x="-3.5" y="-14" width="7" height="28" rx="2" transform="rotate(135)"/>
+        <circle r="10"/><circle r="4" fill="#fffaf0"/></g></svg>
+    </button>
+  </header>
+  <main class="scenes" id="scenes"></main>
+</div>
+
+<div class="screen" id="play" hidden>
+  <header>
+    <button class="iconbtn" id="homeBtn" aria-label="Về màn hình chính">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M4 14 L15 4 L26 14 V26 H18 V18 H12 V26 H4 Z" fill="#ff6b4a" stroke="#3b2a20" stroke-width="3" stroke-linejoin="round"/></svg>
+    </button>
+    <p class="caption" id="caption">Ai đang trốn đấy?</p>
+  </header>
+  <main class="field" id="field"></main>
+</div>
+
+<div class="stage" id="stage" hidden>
+  <div class="glow"></div>
+  <div class="who" id="who" role="button" aria-label="Con vật"><canvas id="whoCv"></canvas></div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">Dành cho bố mẹ</h2>
+    <section>
+      <h3>Chữ hiện trên màn hình</h3>
+      <div class="seg" id="langSeg">
+        <button id="lang-vi" data-lang="vi">Tiếng Việt</button>
+        <button id="lang-en" data-lang="en">English</button>
+        <button id="lang-both" data-lang="both">Cả hai</button>
+      </div>
+    </section>
+    <section>
+      <h3>Âm thanh</h3>
+      <div class="seg" id="soundSeg">
+        <button id="snd-on" data-sound="on">Bật</button>
+        <button id="snd-off" data-sound="off">Tắt</button>
+      </div>
+    </section>
+    <section>
+      <h3>Đọc tên con vật sau tiếng kêu</h3>
+      <div class="seg" id="nameSeg">
+        <button id="name-off" data-name="off">Không đọc</button>
+        <button id="name-on" data-name="on">Đọc bằng giọng iPhone</button>
+      </div>
+      <p class="status" id="voiceStatus"></p>
+    </section>
+    <section>
+      <h3>Tất cả con vật · chạm để nghe</h3>
+      <div class="gal" id="gallery"></div>
+    </section>
+    <section>
+      <h3>Để bé không thoát khỏi game</h3>
+      <p>Bật <b>Guided Access</b>: Cài đặt → Trợ năng → Truy cập được hướng dẫn. Khi bé chơi, bấm nút sườn 3 lần để khoá màn hình trong game.</p>
+    </section>
+    <button class="done" id="done">Xong</button>
+  </div>
+</div>
+
+<script>
+(function(){
+/* ---------- data ---------- */
+const A = (id, vi, viName, en, enName, snd) => ({ id, vi:[vi, viName], en:[en, enName], snd: snd === undefined ? id : snd });
+const ANIMALS = {
+  dog: A('dog','Gâu gâu!','Con chó','Woof!','Dog'),
+  cat: A('cat','Meo meo!','Con mèo','Meow!','Cat'),
+  cow: A('cow','Ò ò!','Con bò','Moo!','Cow'),
+  pig: A('pig','Ủn ỉn!','Con heo','Oink!','Pig'),
+  rooster: A('rooster','Ò ó o!','Con gà trống','Cock-a-doodle-doo!','Rooster'),
+  chick: A('chick','Chíp chíp!','Con gà con','Cheep cheep!','Chick'),
+  duck: A('duck','Cạp cạp!','Con vịt','Quack!','Duck'),
+  goat: A('goat','Be be!','Con dê','Maa!','Goat'),
+  sheep: A('sheep','Be be!','Con cừu','Baa!','Sheep'),
+  horse: A('horse','Hí hí!','Con ngựa','Neigh!','Horse'),
+  'water-buffalo': A('water-buffalo','Nghé ọ!','Con trâu','Moo!','Water buffalo'),
+  tiger: A('tiger','Gừm gừm!','Con hổ','Roar!','Tiger'),
+  lion: A('lion','Gầm gừ!','Con sư tử','Roar!','Lion'),
+  elephant: A('elephant','','Con voi','','Elephant'),
+  monkey: A('monkey','Khẹc khẹc!','Con khỉ','Ooh ooh!','Monkey'),
+  bear: A('bear','Gừ gừ!','Con gấu','Grr!','Bear'),
+  panda: A('panda','','Con gấu trúc','','Panda','@boing'),
+  giraffe: A('giraffe','','Con hươu cao cổ','','Giraffe','@whee'),
+  zebra: A('zebra','Hí hí!','Con ngựa vằn','Neigh!','Zebra'),
+  frog: A('frog','Ộp ộp!','Con ếch','Ribbit!','Frog'),
+  fish: A('fish','Bụp bụp!','Con cá','Blub blub!','Fish','bubbles'),
+  dolphin: A('dolphin','','Con cá heo','','Dolphin'),
+  whale: A('whale','','Con cá voi','','Whale'),
+  crab: A('crab','Lạch cạch!','Con cua','Click clack!','Crab','@clack'),
+  octopus: A('octopus','Bụp bụp!','Con bạch tuộc','Blub!','Octopus','bubbles')
+};
+
+const O = '#3b2a20', S = `stroke="${O}" stroke-width="5" stroke-linejoin="round"`;
+const V = 'viewBox="0 0 200 110" preserveAspectRatio="xMidYMax slice" aria-hidden="true"';
+const ln = (d, w = 4, c = O) => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+function bush(g, flowers){
+  let f = '';
+  if (flowers) [[40,52,'#ff6b9a'],[92,30,'#ffd23f'],[140,40,'#fff'],[172,70,'#ff6b9a'],[66,78,'#fff'],[118,74,'#ff9f1c']].forEach(([x,y,c]) => {
+    f += `<g transform="translate(${x} ${y})">${[0,72,144,216,288].map(a => `<circle cx="${(8*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(8*Math.sin(a*Math.PI/180)).toFixed(1)}" r="6" fill="${c}" stroke="${O}" stroke-width="2.5"/>`).join('')}<circle r="4.5" fill="#ffb627" stroke="${O}" stroke-width="2.5"/></g>`;
+  });
+  return `<svg ${V}><circle cx="28" cy="82" r="40" fill="${g}" ${S}/><circle cx="78" cy="56" r="46" fill="${g}" ${S}/><circle cx="130" cy="58" r="44" fill="${g}" ${S}/><circle cx="176" cy="84" r="38" fill="${g}" ${S}/><rect x="-10" y="86" width="220" height="40" fill="${g}"/>${f}</svg>`;
+}
+const rock = c => `<svg ${V}><path d="M-4 114 q6 -72 62 -88 q42 -14 82 6 q58 24 62 82 z" fill="${c}" ${S}/>${ln('M58 46 q16 -10 30 -6 M140 52 q12 6 18 18')}<ellipse cx="70" cy="80" rx="8" ry="5" fill="rgba(0,0,0,.12)"/><ellipse cx="128" cy="90" rx="10" ry="6" fill="rgba(0,0,0,.12)"/></svg>`;
+const COVERS = {
+  bush: bush('#5fb84a'), flowers: bush('#4fae5a', true), darkbush: bush('#3f8f3c'),
+  hay: `<svg ${V}><path d="M-4 112 q8 -102 104 -102 q96 0 104 102 z" fill="#f2c94c" ${S}/><path d="M40 62 l10 20 M78 32 l6 24 M122 36 l-4 22 M154 62 l-10 18 M100 72 l2 22 M60 92 l4 14 M140 92 l-4 14" stroke="#c99a2e" stroke-width="4" stroke-linecap="round"/></svg>`,
+  fence: `<svg ${V}>${[6,58,110,162].map(x => `<path d="M${x} 114 V26 l16 -18 l16 18 V114 Z" fill="#d4955a" ${S}/>`).join('')}<rect x="-6" y="38" width="212" height="18" fill="#c27e44" ${S}/><rect x="-6" y="76" width="212" height="18" fill="#c27e44" ${S}/></svg>`,
+  crate: `<svg ${V}><rect x="18" y="14" width="164" height="104" rx="8" fill="#d9a066" ${S}/>${ln('M18 48 h164 M18 82 h164')}${ln('M30 20 L170 108 M170 20 L30 108',3)}</svg>`,
+  rock: rock('#a7adb5'), sandrock: rock('#d8c39a'),
+  stump: `<svg ${V}><path d="M36 114 V30 h128 V114 Z" fill="#9b6237" ${S}/><ellipse cx="100" cy="30" rx="64" ry="18" fill="#e3b77e" ${S}/><ellipse cx="100" cy="30" rx="40" ry="10" fill="none" stroke="#b9854c" stroke-width="3"/><ellipse cx="100" cy="30" rx="18" ry="4.5" fill="none" stroke="#b9854c" stroke-width="3"/>${ln('M60 60 v40 M100 56 v50 M140 62 v38',3,'#7a4a28')}</svg>`,
+  log: `<svg ${V}><rect x="-10" y="44" width="170" height="70" rx="12" fill="#8a5a3b" ${S}/><ellipse cx="160" cy="79" rx="30" ry="35" fill="#e3b77e" ${S}/><ellipse cx="160" cy="79" rx="16" ry="19" fill="none" stroke="#b9854c" stroke-width="3"/>${ln('M20 64 h70 M40 92 h80',3,'#6b4228')}</svg>`,
+  leaves: `<svg ${V}>${[[30,-50],[70,-20],[100,0],[130,20],[170,50]].map(([x,r]) => `<ellipse cx="${x}" cy="70" rx="22" ry="60" transform="rotate(${r} ${x} 110)" fill="#3f9b47" ${S}/>`).join('')}${[[30,-50],[70,-20],[100,0],[130,20],[170,50]].map(([x,r]) => `<path d="M${x} 110 V22" transform="rotate(${r} ${x} 110)" stroke="#2b6f33" stroke-width="3"/>`).join('')}</svg>`,
+  wave: `<svg ${V}><path d="M-6 114 V40 q26 -26 52 0 q26 26 52 0 q26 -26 52 0 q26 26 56 0 V114 Z" fill="#2f95d6" ${S}/>${ln('M14 30 q10 -8 20 0 M118 30 q10 -8 20 0',4,'#fff')}<path d="M-6 114 V76 q26 -18 52 0 q26 18 52 0 q26 -18 52 0 q26 18 56 0 V114 Z" fill="#1f78b8"/></svg>`,
+  weed: `<svg ${V}>${[20,62,104,146,184].map((x,i) => `<path d="M${x} 116 q-16 -24 0 -46 q16 -22 0 -${46 + (i%2)*18}" fill="none" stroke="${O}" stroke-width="20" stroke-linecap="round"/><path d="M${x} 116 q-16 -24 0 -46 q16 -22 0 -${46 + (i%2)*18}" fill="none" stroke="#4fbf6a" stroke-width="12" stroke-linecap="round"/>`).join('')}<rect x="-6" y="96" width="212" height="20" fill="#e8d3a2" ${S}/></svg>`,
+  lily: `<svg ${V}><path d="M-6 114 V60 q50 -20 106 0 q56 20 106 0 V114 Z" fill="#2f95d6" ${S}/><path d="M50 66 a40 18 0 1 0 1 0 l-4 18 z" fill="#4fae5a" ${S}/><path d="M144 76 a36 16 0 1 0 1 0 l-4 16 z" fill="#5fb84a" ${S}/><g transform="translate(140 52)">${[0,60,120,180,240,300].map(a => `<ellipse rx="6" ry="13" transform="rotate(${a}) translate(0 -9)" fill="#ffb3c8" stroke="${O}" stroke-width="2.5"/>`).join('')}<circle r="5" fill="#ffd23f" stroke="${O}" stroke-width="2.5"/></g></svg>`
+};
+const SCENES = {
+  farm:   { vi:'Nông trại', en:'Farm', covers:['bush','hay','fence','flowers','crate','rock'],
+            animals:['dog','cat','cow','pig','rooster','chick','duck','goat','sheep','horse','water-buffalo'], show:['dog','cow','duck'] },
+  forest: { vi:'Rừng xanh', en:'Forest', covers:['darkbush','stump','leaves','rock','log','darkbush'],
+            animals:['tiger','lion','elephant','monkey','bear','panda','giraffe','zebra'], show:['elephant','monkey','giraffe'] },
+  water:  { vi:'Dưới nước', en:'Water', covers:['wave','weed','lily','sandrock'],
+            animals:['frog','fish','dolphin','whale','crab','octopus'], show:['frog','crab','whale'] }
+};
+
+/* ---------- settings ---------- */
+let lang = 'vi', soundOn = true, sayName = false;
+try {
+  lang = localStorage.getItem('uoa-lang') || 'vi';
+  soundOn = localStorage.getItem('uoa-sound') !== 'off';
+  sayName = localStorage.getItem('uoa-name') === 'on';
+} catch(e){}
+function save(){ try { localStorage.setItem('uoa-lang', lang); localStorage.setItem('uoa-sound', soundOn ? 'on' : 'off'); localStorage.setItem('uoa-name', sayName ? 'on' : 'off'); } catch(e){} }
+
+/* ---------- audio ---------- */
+let ac = null, out = null, analyser = null, scope = null; const buffers = {};
+try {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  out = ac.createGain(); analyser = ac.createAnalyser(); analyser.fftSize = 512;
+  out.connect(analyser); analyser.connect(ac.destination); scope = new Float32Array(analyser.fftSize);
+} catch(e){ ac = null; }
+function level(){
+  if (!analyser) return 0;
+  analyser.getFloatTimeDomainData(scope);
+  let s = 0; for (let i = 0; i < scope.length; i++) s += scope[i] * scope[i];
+  return Math.sqrt(s / scope.length);
+}
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+const files = [...new Set(Object.values(ANIMALS).map(a => a.snd).filter(s => s && s[0] !== '@'))];
+files.forEach(name => {
+  fetch('snd/' + name + '.mp3').then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => {
+    if (!ac) return no();
+    const p = ac.decodeAudioData(b, ok, no); if (p && p.then) p.then(ok, no);
+  })).then(buf => { buffers[name] = buf; }).catch(() => {});
+});
+function unlock(){ try { if (ac && ac.state !== 'running') ac.resume(); } catch(e){} }
+let current = null;
+function stopCurrent(){ try { if (current) current.stop(); } catch(e){} current = null; }
+function playFile(name){
+  stopCurrent();
+  if (ac && buffers[name]){
+    const s = ac.createBufferSource(); s.buffer = buffers[name]; s.connect(out); s.start(); current = s;
+    return buffers[name].duration;
+  }
+  try { const el = new Audio('snd/' + name + '.mp3'); el.play().catch(() => {}); current = { stop: () => el.pause() }; } catch(e){}
+  return 1.5;
+}
+function tone(type, f0, f1, t0, dur, vol){
+  const t = ac.currentTime + t0, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(out); o.start(t); o.stop(t + dur + .02);
+}
+function synth(kind){
+  if (!ac) return .6; stopCurrent();
+  if (kind === '@boing'){ tone('sine', 180, 520, 0, .18, .35); tone('sine', 520, 260, .18, .3, .25); return .6; }
+  if (kind === '@whee'){ tone('triangle', 300, 1100, 0, .45, .25); return .6; }
+  if (kind === '@clack'){ [0,.13,.26,.45,.58].forEach(t => tone('square', 1800, 900, t, .05, .12)); return .8; }
+  return .5;
+}
+function pop(){ if (soundOn && ac) tone('sine', 320, 760, 0, .14, .18); }
+const synthVoice = window.speechSynthesis;
+function voiceFor(p){ return synthVoice ? synthVoice.getVoices().find(v => v.lang.replace('_','-').toLowerCase().startsWith(p)) || null : null; }
+function speakName(a){
+  if (!synthVoice) return;
+  synthVoice.cancel();
+  const parts = [];
+  if (lang !== 'en') parts.push([a.vi[1], 'vi']);
+  if (lang !== 'vi') parts.push([a.en[1], 'en']);
+  parts.forEach(([t, l]) => { const u = new SpeechSynthesisUtterance(t); u.lang = l === 'vi' ? 'vi-VN' : 'en-US'; const v = voiceFor(l); if (v) u.voice = v; u.rate = .9; u.pitch = 1.1; synthVoice.speak(u); });
+}
+function voiceAnimal(a){
+  if (!soundOn) return;
+  unlock();
+  const len = a.snd[0] === '@' ? synth(a.snd) : playFile(a.snd);
+  if (sayName){ clearTimeout(voiceAnimal.t); voiceAnimal.t = setTimeout(() => speakName(a), Math.min(len, 2.4) * 1000 + 150); }
+}
+
+/* ---------- caption ---------- */
+const cap = document.getElementById('caption');
+function line(pair){ return pair[0] ? `${pair[0]} ${pair[1]}` : pair[1]; }
+function setCaption(a){
+  if (lang === 'vi') cap.textContent = line(a.vi);
+  else if (lang === 'en') cap.textContent = line(a.en);
+  else { cap.textContent = line(a.vi); const s = document.createElement('span'); s.className = 'sub'; s.textContent = line(a.en); cap.appendChild(s); }
+  cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop');
+}
+function idleCaption(){ cap.textContent = lang === 'en' ? "Who's hiding?" : 'Ai đang trốn đấy?'; }
+
+/* ---------- home ---------- */
+const home = document.getElementById('home'), play = document.getElementById('play');
+const scenesEl = document.getElementById('scenes');
+Object.entries(SCENES).forEach(([key, sc]) => {
+  const b = document.createElement('button');
+  b.className = 'scene-card'; b.dataset.s = key; b.id = 'scene-' + key;
+  b.setAttribute('aria-label', sc.vi);
+  b.innerHTML = `<div class="pics">${sc.show.map(id => `<img src="img/${id}.webp" alt="">`).join('')}</div><span class="label">${sc.vi}</span>`;
+  b.addEventListener('click', () => { unlock(); openScene(key); });
+  scenesEl.appendChild(b);
+});
+
+/* ---------- scene ---------- */
+const field = document.getElementById('field');
+let scene = null, spots = [], recent = [], lastTap = Date.now();
+function openScene(key){
+  scene = key; document.body.dataset.scene = key;
+  home.hidden = true; play.hidden = false;
+  field.innerHTML = ''; spots = []; recent = []; bag = []; lastId = null;
+  const sc = SCENES[key];
+  field.classList.toggle('four', sc.covers.length === 4);
+  sc.covers.forEach((c, i) => {
+    const el = document.createElement('button');
+    el.className = 'spot'; el.id = `spot-${key}-${i}`; el.setAttribute('aria-label', 'Chạm để tìm con vật');
+    el.innerHTML = `<div class="cover">${COVERS[c]}</div>`;
+    field.appendChild(el);
+    const s = { el, cover: el.querySelector('.cover') };
+    spots.push(s);
+    el.addEventListener('pointerdown', ev => { ev.preventDefault(); tapSpot(s); });
+    el.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); tapSpot(s); } });
+  });
+  idleCaption(); lastTap = Date.now();
+  if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
+}
+function goHome(){
+  hideStage(true); stopCurrent();
+  play.hidden = true; home.hidden = false; delete document.body.dataset.scene; scene = null;
+}
+document.getElementById('homeBtn').addEventListener('click', goHome);
+
+/* shuffle bag: every animal in the scene comes out once before any repeats,
+   and the first of a new round is never the one just shown */
+let bag = [], lastId = null;
+function pickAnimal(){
+  if (!bag.length){
+    bag = SCENES[scene].animals.slice();
+    for (let i = bag.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    if (bag[bag.length - 1] === lastId && bag.length > 1) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+  }
+  lastId = bag.pop();
+  return ANIMALS[lastId];
+}
+
+/* ---------- stage ---------- */
+const stage = document.getElementById('stage'), who = document.getElementById('who'), cv = document.getElementById('whoCv'), g = cv.getContext('2d');
+let onStage = null, stageTimer = 0, fromSpot = null;
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* motion style per animal: how each one moves while it stands on stage */
+const MOVES = {
+  walk:  { f:.55, bend:.035, breathe:.018 },
+  slow:  { f:.32, bend:.03,  breathe:.026 },
+  tall:  { f:.3,  bend:.07,  breathe:.012 },
+  bob:   { f:.9,  bend:.05,  breathe:.015 },
+  hop:   { f:.75, bend:.02,  breathe:.015 },
+  swim:  { f:.5,  bend:0,    breathe:0 },
+  scuttle:{ f:.7, bend:.01,  breathe:.01 },
+  jelly: { f:.45, bend:0,    breathe:.035 }
+};
+const STYLE = { chick:'bob', rooster:'bob', duck:'bob', frog:'hop', monkey:'hop',
+  elephant:'slow', bear:'slow', panda:'slow', cow:'slow', 'water-buffalo':'slow',
+  giraffe:'tall', fish:'swim', dolphin:'swim', whale:'swim', crab:'scuttle', octopus:'jelly' };
+const IMGS = {};
+Object.keys(ANIMALS).forEach(id => { const im = new Image(); im.src = `img/${id}.webp`; IMGS[id] = im; });
+
+let raf = 0, t0 = 0, lvl = 0, spr = 0, sprV = 0, W = 0, H = 0, dpr = 1, lastT = 0;
+const N = 36;
+function sizeCanvas(){
+  const r = who.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.round(r.width * dpr); H = Math.round(r.height * dpr);
+  if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H;
+}
+function draw(now){
+  raf = 0;
+  if (stage.hidden) return;
+  const a = onStage || draw.last; if (!a) return;
+  draw.last = a;
+  const img = IMGS[a.id];
+  const t = (now - t0) / 1000, dt = Math.min(.05, (now - (lastT || now)) / 1000); lastT = now;
+  const style = STYLE[a.id] || 'walk', M = MOVES[style], TAU = Math.PI * 2;
+
+  // live loudness of the sound the animal is making
+  const target = Math.min(1, level() * 7);
+  lvl += (target - lvl) * (target > lvl ? .6 : .12);
+  // springy squash after a tap
+  sprV += (-170 * spr - 9 * sprV) * dt; spr += sprV * dt;
+
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0, 0, W, H);
+  if (!img.complete || !img.naturalWidth){ raf = requestAnimationFrame(draw); return; }
+
+  const m = W * .1, boxW = W - 2 * m, boxH = H - 2 * m;
+  const k = Math.min(boxW / img.naturalWidth, boxH / img.naturalHeight);
+  const dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const still = reduce;
+
+  let gx = 0, gy = 0, rot = 0, sx = 1, sy = 1, bend = 0, lift = 0;
+  const breath = still ? 0 : M.breathe * Math.sin(TAU * .5 * t);
+  sy += breath; sx -= breath * .4;
+  if (!still){
+    if (style === 'bob'){
+      const ph = (t * M.f) % 1, peck = ph < .22 ? Math.sin(ph / .22 * Math.PI) : 0;
+      bend = W * M.bend * (peck + .25 * Math.sin(TAU * .4 * t));
+      sy -= peck * .03;
+    } else if (style === 'hop'){
+      const ph = (t * M.f) % 1;
+      if (ph < .32){ lift = Math.sin(ph / .32 * Math.PI); gy = -H * .07 * lift; sy += .05 * lift; sx -= .03 * lift; }
+      else if (ph < .44){ const s = Math.sin((ph - .32) / .12 * Math.PI); sy -= .07 * s; sx += .05 * s; }
+      bend = W * M.bend * Math.sin(TAU * .5 * t);
+    } else if (style === 'swim'){
+      gy = H * .035 * Math.sin(TAU * .45 * t); gx = W * .025 * Math.sin(TAU * .22 * t); rot = .05 * Math.sin(TAU * .45 * t + 1);
+    } else if (style === 'scuttle'){
+      gx = W * .07 * Math.sin(TAU * M.f * t); rot = .03 * Math.sin(TAU * M.f * 2 * t); gy = -Math.abs(Math.sin(TAU * M.f * 2 * t)) * H * .01;
+    } else {
+      bend = W * M.bend * (Math.sin(TAU * M.f * t) + .25 * Math.sin(TAU * M.f * 2.3 * t + 1));
+    }
+  }
+  // calling out: stretch up and tremble with the sound
+  sy *= 1 + .12 * lvl; sx *= 1 - .05 * lvl;
+  bend += W * .02 * lvl * Math.sin(TAU * 7 * t);
+  // tap spring
+  sy *= 1 - .1 * spr; sx *= 1 + .07 * spr;
+
+  const baseY = H - m * .7;
+  // ground shadow
+  g.save(); g.translate(W / 2 + gx, baseY);
+  g.fillStyle = 'rgba(59,42,32,.16)';
+  g.beginPath(); g.ellipse(0, 0, dw * .36 * (1 - .3 * lift), dw * .06 * (1 - .3 * lift), 0, 0, TAU); g.fill();
+  g.restore();
+
+  g.save();
+  g.translate(W / 2 + gx, baseY + gy); g.rotate(rot); g.scale(sx, sy);
+  g.imageSmoothingQuality = 'high';
+  if (style === 'swim' && !still){
+    // a wave runs along the body from head to tail
+    for (let i = 0; i < N; i++){
+      const u = (i + .5) / N, off = H * .022 * Math.sin(TAU * (u * 1.1 - .6 * t));
+      g.drawImage(img, i * iw / N, 0, iw / N + 1, ih, -dw / 2 + i * dw / N, -dh + off, dw / N + 1, dh);
+    }
+  } else {
+    for (let i = 0; i < N; i++){
+      const y = (i + .5) / N;                 // 0 = top, 1 = feet
+      let off = bend * Math.pow(1 - y, 1.6);  // feet stay put, head moves most
+      if (style === 'jelly' && !still) off += W * .03 * Math.sin(TAU * (y * 1.4 - .55 * t)) * y;
+      g.drawImage(img, 0, i * ih / N, iw, ih / N + 1, -dw / 2 + off, -dh + i * dh / N, dw, dh / N + 1);
+    }
+  }
+  g.restore();
+  raf = requestAnimationFrame(draw);
+}
+function startLoop(){ sizeCanvas(); if (!raf) raf = requestAnimationFrame(draw); }
+window.addEventListener('resize', () => { if (!stage.hidden) sizeCanvas(); });
+
+function deltaTo(el){
+  const r = el.getBoundingClientRect(), w = who.getBoundingClientRect();
+  const sx = r.left + r.width / 2, sy = r.top + r.height * .55;
+  return { dx: sx - (w.left + w.width / 2), dy: sy - (w.top + w.height / 2), s: Math.max(.12, (r.width * .45) / w.width) };
+}
+let lastSpawn = 0;
+function tapSpot(s){
+  const now = Date.now();
+  if (now - lastSpawn < 280) return;          // a palm or double tap counts once
+  lastSpawn = now; lastTap = now; unlock();
+  s.cover.classList.remove('shake','wiggle'); void s.cover.offsetWidth; s.cover.classList.add('shake');
+  if (who.getAnimations) who.getAnimations().forEach(x => x.cancel());
+  if (onStage) hideStage(true);
+  const a = pickAnimal(); onStage = a; fromSpot = s; draw.last = a;
+  who.setAttribute('aria-label', a.vi[1]);
+  stage.hidden = false; stage.classList.add('on');
+  t0 = performance.now(); spr = 0; sprV = 0; lvl = 0; lastT = 0;
+  startLoop();
+  pop(); voiceAnimal(a); setCaption(a);
+  const d = deltaTo(s.cover);
+  if (!reduce && who.animate){
+    who.animate([
+      { transform:`translate(${d.dx}px, ${d.dy}px) scale(${d.s})`, opacity:.2 },
+      { transform:`translate(${d.dx * .4}px, ${d.dy * .4 - 60}px) scale(${(d.s + 1) / 2})`, opacity:1, offset:.45 },
+      { transform:'translate(0,0) scale(1)', opacity:1 }
+    ], { duration:340, easing:'cubic-bezier(.3,1.25,.6,1)' }).onfinish = () => { if (onStage === a) sprV = -5; };
+  }
+  clearTimeout(stageTimer); stageTimer = setTimeout(() => hideStage(false), 3000);
+}
+function hideStage(instant){
+  clearTimeout(stageTimer);
+  if (!onStage) return;
+  const s = fromSpot; onStage = null;
+  stage.classList.remove('on');
+  if (instant || reduce || !who.animate || !s){ stage.hidden = true; return; }
+  const d = deltaTo(s.cover);
+  who.animate([
+    { transform:'translate(0,0) scale(1)', opacity:1 },
+    { transform:`translate(${d.dx}px, ${d.dy}px) scale(${d.s})`, opacity:0 }
+  ], { duration:300, easing:'cubic-bezier(.5,0,.75,0)' }).onfinish = () => { if (!onStage) stage.hidden = true; };
+  if (scene) setTimeout(() => { if (!onStage) idleCaption(); }, 450);
+}
+/* any tap while an animal is out brings the next animal right away:
+   from the hiding spot under the finger, or a random spot if the finger is on the animal */
+stage.addEventListener('pointerdown', ev => {
+  ev.preventDefault();
+  if (!scene) return;
+  const under = document.elementsFromPoint(ev.clientX, ev.clientY).find(el => el.classList && el.classList.contains('spot'));
+  let s = under && spots.find(x => x.el === under);
+  if (!s){ const others = spots.filter(x => x !== fromSpot); s = others[Math.floor(Math.random() * others.length)] || spots[0]; }
+  tapSpot(s);
+});
+
+setInterval(() => {
+  if (!scene || onStage || Date.now() - lastTap < 7000) return;
+  const c = spots[Math.floor(Math.random() * spots.length)].cover;
+  c.classList.remove('wiggle','shake'); void c.offsetWidth; c.classList.add('wiggle');
+}, 3200);
+
+/* ---------- parent gate ---------- */
+const gear = document.getElementById('gear'), sheet = document.getElementById('sheet');
+let holdT = 0;
+gear.addEventListener('pointerdown', ev => { ev.preventDefault(); gear.classList.add('holding'); holdT = setTimeout(openSheet, 3000); });
+['pointerup','pointerleave','pointercancel'].forEach(t => gear.addEventListener(t, () => { clearTimeout(holdT); gear.classList.remove('holding'); }));
+gear.addEventListener('contextmenu', e => e.preventDefault());
+function syncSeg(){
+  document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  document.querySelectorAll('#soundSeg button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.sound === 'on') === soundOn)));
+  document.querySelectorAll('#nameSeg button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.name === 'on') === sayName)));
+  const st = document.getElementById('voiceStatus');
+  if (!sayName){ st.textContent = 'Bé chỉ nghe tiếng kêu thật của con vật.'; return; }
+  const vi = voiceFor('vi');
+  st.innerHTML = vi ? `Giọng tiếng Việt trên máy: <b>${vi.name}</b>` : 'Chưa thấy giọng tiếng Việt. Tải trong Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói.';
+}
+function openSheet(){ clearTimeout(holdT); gear.classList.remove('holding'); unlock(); syncSeg(); sheet.hidden = false; document.getElementById('done').focus(); }
+if (synthVoice && synthVoice.addEventListener) synthVoice.addEventListener('voiceschanged', () => { if (!sheet.hidden) syncSeg(); });
+document.getElementById('langSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ lang = b.dataset.lang; save(); syncSeg(); } });
+document.getElementById('soundSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ soundOn = b.dataset.sound === 'on'; save(); syncSeg(); if (!soundOn){ stopCurrent(); if (synthVoice) synthVoice.cancel(); } } });
+document.getElementById('nameSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b){ sayName = b.dataset.name === 'on'; save(); syncSeg(); } });
+document.getElementById('done').addEventListener('click', () => { sheet.hidden = true; });
+const gal = document.getElementById('gallery');
+Object.values(ANIMALS).forEach(a => {
+  const b = document.createElement('button');
+  b.innerHTML = `<img src="img/${a.id}.webp" alt=""><span>${a.vi[1].replace('Con ', '')}</span>`;
+  b.setAttribute('aria-label', a.vi[1]);
+  b.addEventListener('click', () => { unlock(); voiceAnimal(a); });
+  gal.appendChild(b);
+});
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>

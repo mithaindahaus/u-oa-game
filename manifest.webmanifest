@@ -1,0 +1,24 @@
+{
+  "name": "Ú Òa! Game con vật cho bé",
+  "short_name": "Ú Òa",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#8fd8ff",
+  "theme_color": "#8fd8ff",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
